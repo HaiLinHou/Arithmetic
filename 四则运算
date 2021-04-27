@@ -1,0 +1,108 @@
+#include<GL/glut.h>
+#include<math.h>
+#include<stdlib.h>
+#include<stdio.h>
+
+const double TWO_PI = 6.2831853;
+GLsizei winWidth = 400;
+GLsizei winHeight = 400;
+GLuint regHex;
+
+class screenPt {
+private:
+    GLint x, y;
+public:
+    screenPt() {
+        x = y = 0;
+    }
+    void setCoords(GLint xCoord, GLint yCoord) {
+        x = xCoord;
+        y = yCoord;
+    }
+    GLint getx() const {
+        return x;
+    }
+    GLint gety() const {
+        return y;
+    }
+
+};
+void IntegerBresenhamline(int x0, int y0, int x1, int y1)//起点（x0，y0），终点（x1，y1）
+{
+    int x, y, dx, dy, e, i;
+    dx = x1 - x0, dy = y1 - y0;
+    e = -dx;
+    x = x0, y = y0;
+    
+  //  glClear(GL_COLOR_BUFFER_BIT);
+    /*
+    * 函数原型：void glBegin(GLenum mode)
+    * glBegin()是和glEnd()结合起来使用
+    * GL_POINTS：把每个顶点作为一个点进行处理，顶点n定义了点n，绘制N个点
+    */
+    glBegin(GL_POINTS);
+    for (i = 0; i <= dx; i++)
+    {
+        
+        glVertex3f(x, y, 0);
+        x = x + 1;
+        e = e + 2 * dy;  //  e = e + k;
+        if (e >= 0) { y++, e = e - 2 * dx; }    // e = e - 1
+    }
+    glEnd();
+    glFlush();
+}
+
+static void init(GLint n)
+{
+    screenPt hexVertex, circCtr;
+    GLdouble theta, theta1;
+    GLint k;
+    circCtr.setCoords(winWidth / 2, winHeight / 2);//设置中心坐标
+    glClearColor(1.0, 1.0, 1.0, 0.0);//显示窗口背景是白色
+    regHex = glGenLists(1);//为显示表设定一个标识符
+    glNewList(regHex, GL_COMPILE);//创建显示表并且为以后执行而存储该表
+    glColor3f(0.0, 1.0, 0.0);//设置多边形颜色为红色
+    glBegin(GL_POLYGON);
+    for (k = 0; k < n; k++) {
+        theta = TWO_PI * k /(n*1.0) ;//修改此处K值生成你想生成的任意N边形   
+       // theta1 = TWO_PI * (k + 1) / (n * 1.0);
+//        hexVertex.setCoords(circCtr.getx() + 150 * cos(theta1), circCtr.gety() + 150 * sin(theta1));
+            hexVertex.setCoords(circCtr.getx() + 150 * cos(theta), circCtr.gety() + 150 * sin(theta));
+            //IntegerBresenhamline(circCtr.getx() + 150 * cos(theta1), circCtr.gety() + 150 * sin(theta1), circCtr.getx() + 150 * cos(theta), circCtr.gety() + 150 * sin(theta));
+       glVertex2i(hexVertex.getx(), hexVertex.gety());//显示各个点
+
+    }
+   glEnd();
+   glEndList();
+
+}
+
+void regHexagon(void)
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+    glCallList(regHex);//执行标识符为regHex的显示表
+    glFlush();
+}
+
+void winReshapeFcn(int newWidth, int newHeight)
+{
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0.0, (GLdouble)newWidth, 0.0, (GLdouble)newHeight);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+void main(int argc, char** argv)
+{
+    GLint n;
+    scanf_s("%d", &n);
+    glutInit(&argc, argv);//Initialize GLUT
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);//显示窗口使用单个缓存且使用RGB颜色值
+    glutInitWindowPosition(100, 100);//显示窗口左上角位置，应该在屏幕边界往右100像素，边界往下100像素
+    glutInitWindowSize(winWidth, winHeight);//初始化窗口尺寸
+    glutCreateWindow("Reshape-Function & Display-List Example");
+    init(n);
+    glutDisplayFunc(regHexagon);
+    glutReshapeFunc(winReshapeFcn);
+    glutMainLoop();
+}
